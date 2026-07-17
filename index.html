@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>避风港服务器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft Yahei", sans-serif;
+        }
+        body {
+            color: #333333;
+            background-color: #f8f5ee;
+        }
+        /* 全屏头部横幅 */
+        .hero-banner {
+            width: 100%;
+            height: 100vh;
+            position: relative;
+            background: url('bg.jpg') no-repeat center center;
+            background-size: cover;
+        }
+        .hero-text {
+            position: absolute;
+            bottom: 80px;
+            right: 50px;
+            text-align: right;
+            text-shadow: 2px 2px 6px #000;
+            color: #ffffff;
+        }
+        .hero-text h1 {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+        .hero-text p {
+            font-size: 22px;
+            line-height: 1.6;
+        }
+        /* 主体内容区域 */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 60px 30px;
+        }
+        .server-info {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 40px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 40px;
+            align-items: flex-start;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .info-left {
+            flex: 1;
+            min-width: 300px;
+        }
+        .info-left h2 {
+            font-size: 30px;
+            margin-bottom: 20px;
+            color: #665844;
+        }
+        .info-left p {
+            font-size: 18px;
+            line-height: 2;
+            margin: 10px 0;
+        }
+        .mod-img {
+            flex: 1;
+            min-width: 300px;
+        }
+        .mod-img img {
+            width: 100%;
+            border-radius: 12px;
+        }
+        /* 按钮样式 */
+        .copy-btn, .mod-download-btn {
+            background-color: #e8e2d5;
+            color: #333;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-left: 10px;
+            transition: background 0.2s;
+        }
+        .copy-btn:hover, .mod-download-btn:hover {
+            background-color: #d9d2c3;
+        }
+        .mod-download-btn {
+            margin-top: 10px;
+            padding: 12px 24px;
+            font-size: 18px;
+        }
+        /* 赞助板块 */
+        .donate-section {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 40px 30px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .donate-section h2 {
+            font-size: 30px;
+            margin-bottom: 25px;
+            color: #665844;
+        }
+        .donate-qrcode {
+            max-width: 350px;
+            margin: 0 auto 20px;
+        }
+        .donate-qrcode img {
+            width: 100%;
+            border-radius: 12px;
+        }
+        .donate-desc {
+            font-size: 18px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部全屏横幅 -->
+    <div class="hero-banner">
+        <div class="hero-text">
+            <h1>避风港服务器</h1>
+            <p>添加机械动力 ｜ 天境往事 ｜ 暮色森林 | 农夫乐事 ｜AI对话 等模组</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- 服务器信息与模组下载区域 -->
+        <div class="server-info">
+            <div class="info-left">
+                <h2>加入服务器</h2>
+                <p>服务器地址：192.168.1.108 <button class="copy-btn" onclick="copyServerAddress()">复制地址</button></p>
+                <p>请使用MC1.21.1 Neoforge版本加入服务器</p>
+                <button class="mod-download-btn" onclick="window.open('https://pan.baidu.com/s/1qT4-kAX3YLiz4Rh59xsS3A?pwd=bfgf','_blank')">下载模组</button>
+                <p>下载后解压即可放入模组列表</p>
+            </div>
+            <div class="mod-img">
+                <img src="modlist.jpg" alt="模组列表">
+            </div>
+        </div>
+
+        <!-- 赞助区域 -->
+        <div class="donate-section">
+            <h2>赞助我们</h2>
+            <div class="donate-qrcode">
+                <img src="pay.jpg" alt="微信付款码">
+            </div>
+            <p class="donate-desc">感谢赞助，我们会用这些钱来购买更好的服务器</p>
+        </div>
+    </div>
+
+    <script>
+        // 复制服务器地址功能
+        function copyServerAddress() {
+            navigator.clipboard.writeText('192.168.1.108').then(() => {
+                alert('服务器地址已复制！');
+            }).catch(err => {
+                console.error('复制失败', err);
+            });
+        }
+    </script>
+</body>
+</html>
