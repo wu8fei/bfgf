@@ -15,6 +15,16 @@
             color: #333333;
             background-color: #f8f5ee;
         }
+        /* 左上角访问统计徽章 */
+        .visit-badge {
+            position: fixed;
+            top: 16px;
+            left: 16px;
+            z-index: 999;
+        }
+        .visit-badge img {
+            display: block;
+        }
         /* 全屏头部横幅 */
         .hero-banner {
             width: 100%;
@@ -126,6 +136,13 @@
     </style>
 </head>
 <body>
+    <!-- 左上角访问人数徽章 -->
+    <div class="visit-badge">
+        <a href="https://hits.seeyoufarm.com">
+            <img src="https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fbfg.cc.cd&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=%E8%AE%BF%E9%97%AE%E9%87%8F&edge_flat=false"/>
+        </a>
+    </div>
+
     <!-- 顶部全屏横幅 -->
     <div class="hero-banner">
         <div class="hero-text">
