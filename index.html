@@ -21,8 +21,6 @@
             align-items: center;
             padding: 1rem;
         }
-
-        /* ===== 登录页 ===== */
         #loginPage {
             width: 100%;
             max-width: 380px;
@@ -97,8 +95,6 @@
             margin-top: 0.8rem;
             opacity: 0.6;
         }
-
-        /* ===== 主界面（和之前一样） ===== */
         #app {
             display: none;
             width: 100%;
@@ -171,7 +167,6 @@
             color: #ffd93d;
             font-weight: 600;
         }
-
         .chat-area {
             flex: 1;
             overflow-y: auto;
@@ -221,7 +216,6 @@
             font-size: 0.8rem;
             color: #ffd93d;
         }
-
         .input-bar {
             display: flex;
             align-items: center;
@@ -269,7 +263,6 @@
         .input-bar .plus-btn:hover {
             background: rgba(255, 255, 255, 0.08);
         }
-
         #gameModal {
             display: none;
             position: fixed;
@@ -321,7 +314,6 @@
         #gameModal .game-box .close-btn:hover {
             background: rgba(255, 255, 255, 0.1);
         }
-
         @media (max-width: 500px) {
             .topbar .title {
                 font-size: 0.9rem;
@@ -341,18 +333,16 @@
 </head>
 <body>
 
-    <!-- ===== 登录页 ===== -->
     <div id="loginPage">
         <h1>🫡 神人微聊</h1>
         <div class="sub">三大神人专属 · 登录</div>
         <input type="text" id="loginUser" placeholder="请输入用户名">
         <input type="password" id="loginPass" placeholder="请输入密码">
-        <button onclick="login()">进入微聊</button>
+        <button id="loginBtn">进入微聊</button>
         <div id="loginError"></div>
         <div class="login-hint">仅限 wu8fei / womanhello / zhonsiiq12</div>
     </div>
 
-    <!-- ===== 主界面 ===== -->
     <div id="app">
         <div class="app-container">
             <div class="topbar">
@@ -367,14 +357,13 @@
             </div>
             <div class="chat-area" id="chatArea"></div>
             <div class="input-bar">
-                <input type="text" id="msgInput" placeholder="输入消息..." onkeydown="if(event.key==='Enter') sendMessage()">
-                <button onclick="sendMessage()">发送</button>
+                <input type="text" id="msgInput" placeholder="输入消息...">
+                <button id="sendBtn">发送</button>
                 <button class="plus-btn" onclick="showRedpacket()">+</button>
             </div>
         </div>
     </div>
 
-    <!-- ===== 游戏弹窗 ===== -->
     <div id="gameModal">
         <div class="game-box">
             <h2>🦶 收集汗脚</h2>
@@ -395,13 +384,12 @@
         let currentUser = null;
         let allUsers = [];
 
-        // ===== 登录函数（带详细错误日志） =====
+        // ===== 登录函数 =====
         async function login() {
             const username = document.getElementById('loginUser').value.trim();
             const password = document.getElementById('loginPass').value.trim();
             const errEl = document.getElementById('loginError');
 
-            // 清空旧错误
             errEl.textContent = '';
 
             if (!username || !password) {
@@ -419,7 +407,6 @@
                     .eq('password', password)
                     .maybeSingle();
 
-                // 打印详细错误到控制台，方便排查
                 if (error) {
                     console.error('❌ Supabase 查询错误:', error);
                     errEl.textContent = '❌ 数据库查询失败，请查看控制台 (F12)';
@@ -432,13 +419,11 @@
                     return;
                 }
 
-                // ✅ 登录成功
                 console.log('✅ 登录成功:', data.username);
                 currentUser = data;
                 document.getElementById('loginPage').style.display = 'none';
                 document.getElementById('app').style.display = 'block';
 
-                // 加载所有用户信息
                 const { data: users } = await supabase.from('users').select('*');
                 allUsers = users || [];
 
@@ -455,6 +440,31 @@
             }
         }
 
+        // 绑定登录按钮事件
+        document.getElementById('loginBtn').addEventListener('click', login);
+
+        // 绑定发送按钮事件
+        document.getElementById('sendBtn').addEventListener('click', sendMessage);
+
+        // 绑定回车发送
+        document.getElementById('msgInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // 绑定回车登录
+        document.getElementById('loginPass').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                login();
+            }
+        });
+        document.getElementById('loginUser').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                login();
+            }
+        });
+
         function updateScoreDisplay() {
             if (!currentUser) return;
             document.getElementById('userScore').textContent = `🦶 ${currentUser.score || 0}`;
@@ -462,7 +472,7 @@
             document.getElementById('userLevel').textContent = `Lv.${level}`;
         }
 
-        // ===== 消息（和之前一样） =====
+        // ===== 消息 =====
         async function loadMessages() {
             const { data, error } = await supabase
                 .from('messages')
@@ -682,7 +692,7 @@
             });
         }
 
-        console.log('🫡 神人微聊已加载 (登录不预填账号)');
+        console.log('🫡 神人微聊已加载');
         console.log('📌 账号: wu8fei / womanhello / zhonsiiq12');
         console.log('📌 如果登录失败，请检查 Supabase RLS 是否关闭');
     </script>
