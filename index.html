@@ -380,11 +380,17 @@
         const SUPABASE_KEY = 'sb_publishable_N9zCemUdRRyLFWlDsgdn3A_1YOf5xFf';
         // ==========================
 
+        // ====== 硬编码账号密码（仅用于登录验证） ======
+        const USERS = {
+            'wu8fei': 'wu8fei_2015_49466',
+            'womanhello': 'xdfwomanhello',
+            'zhonsiiq12': 'zxcvbnm'
+        };
+
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         let currentUser = null;
-        let allUsers = [];
 
-        // ===== 登录函数 =====
+        // ===== 登录函数（async/await 已正确使用） =====
         async function login() {
             const username = document.getElementById('loginUser').value.trim();
             const password = document.getElementById('loginPass').value.trim();
@@ -397,35 +403,53 @@
                 return;
             }
 
-            console.log('🔍 尝试登录:', username);
+            // 前端验证
+            if (!USERS[username] || USERS[username] !== password) {
+                errEl.textContent = '❌ 用户名或密码错误';
+                return;
+            }
+
+            console.log('✅ 登录成功:', username);
 
             try {
-                const { data, error } = await supabase
+                // 查询用户积分
+                let { data, error } = await supabase
                     .from('users')
-                    .select('*')
+                    .select('score, level')
                     .eq('username', username)
-                    .eq('password', password)
                     .maybeSingle();
 
                 if (error) {
-                    console.error('❌ Supabase 查询错误:', error);
-                    errEl.textContent = '❌ 数据库查询失败，请查看控制台 (F12)';
+                    console.error('查询用户失败:', error);
+                    errEl.textContent = '❌ 数据库查询失败';
                     return;
                 }
 
+                // 如果没有记录，创建一条
                 if (!data) {
-                    console.warn('⚠️ 未找到用户:', username);
-                    errEl.textContent = '❌ 用户名或密码错误';
-                    return;
+                    const { data: newUser, error: insertError } = await supabase
+                        .from('users')
+                        .insert({ username: username, score: 0, level: 0 })
+                        .select('score, level')
+                        .single();
+
+                    if (insertError) {
+                        console.error('创建用户失败:', insertError);
+                        errEl.textContent = '❌ 初始化用户失败';
+                        return;
+                    }
+                    data = newUser;
                 }
 
-                console.log('✅ 登录成功:', data.username);
-                currentUser = data;
+                currentUser = {
+                    username: username,
+                    score: data.score || 0,
+                    level: data.level || 0
+                };
+
+                // 进入主界面
                 document.getElementById('loginPage').style.display = 'none';
                 document.getElementById('app').style.display = 'block';
-
-                const { data: users } = await supabase.from('users').select('*');
-                allUsers = users || [];
 
                 document.getElementById('avatarLetter').textContent = username[0].toUpperCase();
                 document.getElementById('userName').textContent = username;
@@ -435,41 +459,28 @@
                 subscribeMessages();
 
             } catch (err) {
-                console.error('❌ 登录异常:', err);
-                errEl.textContent = '❌ 网络异常，请检查控制台 (F12)';
+                console.error('登录异常:', err);
+                errEl.textContent = '❌ 登录异常，请查看控制台';
             }
         }
 
-        // 绑定登录按钮事件
-        document.getElementById('loginBtn').addEventListener('click', login);
-
-        // 绑定发送按钮事件
-        document.getElementById('sendBtn').addEventListener('click', sendMessage);
-
-        // 绑定回车发送
-        document.getElementById('msgInput').addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
-        });
-
-        // 绑定回车登录
-        document.getElementById('loginPass').addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                login();
-            }
-        });
-        document.getElementById('loginUser').addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                login();
-            }
-        });
-
+        // ===== 更新积分和等级显示 =====
         function updateScoreDisplay() {
             if (!currentUser) return;
             document.getElementById('userScore').textContent = `🦶 ${currentUser.score || 0}`;
             const level = Math.floor((currentUser.score || 0) / 7891);
+            currentUser.level = level;
             document.getElementById('userLevel').textContent = `Lv.${level}`;
+        }
+
+        // ===== 保存积分到 Supabase =====
+        async function saveScore() {
+            if (!currentUser) return;
+            const { error } = await supabase
+                .from('users')
+                .update({ score: currentUser.score, level: currentUser.level })
+                .eq('username', currentUser.username);
+            if (error) console.error('保存积分失败:', error);
         }
 
         // ===== 消息 =====
@@ -545,35 +556,39 @@
                 alert('❌ 汗脚分不足或输入无效');
                 return;
             }
-            supabase.from('users').update({ score: (currentUser.score || 0) - amount }).eq('username', currentUser.username)
-                .then(() => {
-                    currentUser.score -= amount;
-                    updateScoreDisplay();
-                    const receiver = target.trim() || null;
-                    supabase.from('messages').insert({
-                        sender: currentUser.username,
-                        receiver: receiver,
-                        content: `🧧 发了 ${amount} 汗脚分红包${receiver ? ' 给 ' + receiver : ' (群红包)'}`,
-                        type: 'redpacket',
-                        score_change: amount
-                    }).then(() => {
-                        if (receiver) {
-                            supabase.from('users').select('score').eq('username', receiver).then(({ data }) => {
-                                if (data && data[0]) {
-                                    const newScore = (data[0].score || 0) + amount;
-                                    supabase.from('users').update({ score: newScore }).eq('username', receiver)
-                                        .then(() => {
-                                            if (receiver === currentUser.username) {
-                                                currentUser.score = newScore;
-                                                updateScoreDisplay();
-                                            }
-                                        });
-                                }
-                            });
-                        }
-                        loadMessages();
-                    });
-                });
+
+            // 扣分并保存
+            currentUser.score -= amount;
+            updateScoreDisplay();
+            saveScore();
+
+            const receiver = target.trim() || null;
+            supabase.from('messages').insert({
+                sender: currentUser.username,
+                receiver: receiver,
+                content: `🧧 发了 ${amount} 汗脚分红包${receiver ? ' 给 ' + receiver : ' (群红包)'}`,
+                type: 'redpacket',
+                score_change: amount
+            }).then(() => {
+                // 如果是单独发，给对方加分
+                if (receiver) {
+                    supabase.from('users')
+                        .select('score')
+                        .eq('username', receiver)
+                        .then(({ data }) => {
+                            if (data && data[0]) {
+                                const newScore = (data[0].score || 0) + amount;
+                                supabase.from('users')
+                                    .update({ score: newScore })
+                                    .eq('username', receiver)
+                                    .then(() => {
+                                        // 如果当前用户就是接收者，更新显示（但当前用户是发送者）
+                                    });
+                            }
+                        });
+                }
+                loadMessages();
+            });
         }
 
         // ===== 游戏 =====
@@ -653,12 +668,11 @@
                     gameScore++;
                     document.getElementById('gameScore').textContent = gameScore;
                     items.splice(i, 1);
+                    // 加分并保存
                     if (currentUser) {
-                        const newScore = (currentUser.score || 0) + 1;
-                        supabase.from('users').update({ score: newScore }).eq('username', currentUser.username).then(() => {
-                            currentUser.score = newScore;
-                            updateScoreDisplay();
-                        });
+                        currentUser.score += 1;
+                        updateScoreDisplay();
+                        saveScore();
                     }
                     continue;
                 }
@@ -692,9 +706,22 @@
             });
         }
 
+        // 绑定事件
+        document.getElementById('loginBtn').addEventListener('click', login);
+        document.getElementById('loginPass').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') login();
+        });
+        document.getElementById('loginUser').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') login();
+        });
+        document.getElementById('sendBtn').addEventListener('click', sendMessage);
+        document.getElementById('msgInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') sendMessage();
+        });
+
         console.log('🫡 神人微聊已加载');
         console.log('📌 账号: wu8fei / womanhello / zhonsiiq12');
-        console.log('📌 如果登录失败，请检查 Supabase RLS 是否关闭');
+        console.log('📌 积分、等级、消息 存储在 Supabase');
     </script>
 </body>
 </html>
